@@ -1,0 +1,32 @@
+---
+description: DW 运营深色主题下页面面板须使用透明磨砂玻璃规范（与 Design Kit / global.css 一致）
+alwaysApply: true
+---
+
+# DW 运营 · 面板 / 磨砂玻璃规范
+
+面向 `[data-dw-theme='dw-ops']`（见 `src/theme.ts`、`applyTheme('dw-ops')`）。**以后新增任何页面内面板、托盘、卡片容器、带背景的表单区块**，默认须遵守本节，避免再用实色 `--el-fill-color-blank` 盖住页面叠层。
+
+## 必须使用的设计令牌
+
+- 填充：`var(--dw-panel-fill)`（运行时由 `panelDWOps.fill` 注入，半透明灰）
+- 模糊：`var(--dw-panel-blur)`（100px，大块）或 `var(--dw-panel-blur-dense)`（72px，密铺 / 表格 / 控件）
+- 外轮廓：`var(--dw-panel-border-strong)`（= Border/2-Dark）
+- 内缘高光：`box-shadow: inset 0 0 0 1px var(--dw-outline-inner-glass)`（与 `.dw-panel--chrome` 一致）
+- 圆角：`var(--dw-panel-radius)`
+
+## 推荐 DOM / class 组合
+
+- **页面大块区域**（主内容区、表格托盘、设置页主体）：`dw-panel dw-panel--dense dw-panel--chrome`，按需加 `padding`。
+- **密铺卡片**（任务卡、样本卡）：同上组合或至少 `dw-panel dw-panel--dense` + 内缘高光。
+- **全局 Popper 浮层**（Select / Dropdown / Cascader / Autocomplete / DatePicker）：运营主题下见 `src/styles/global.css` 中 `[data-dw-theme='dw-ops']` 对 `.el-select-dropdown`、`.el-dropdown-menu` 等的磨砂规则；新业务若无特例勿覆盖为背景不透明。
+
+## 禁止 / 避免
+
+- 在已有 `backdrop-filter` 的容器上使用不透明 `--el-fill-color-blank` 作为「面板背景」（会挡住下层 artwork / scrim，视觉上像贴了一块实色板）。
+- 自造与令牌不一致的 `rgba` 大块背景；应用 `--dw-panel-fill` 或 `color-mix(in srgb, var(--dw-panel-fill) …)`。
+
+## 代码锚点
+
+- 面板基类：`src/styles/global.css` → `.dw-panel`、`.dw-panel--dense`、`.dw-panel--chrome`
+- 令牌写入：`src/theme.ts`、`src/design-tokens.ts` → `panelDWOps`

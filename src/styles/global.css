@@ -1,0 +1,644 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+
+/**
+ * DW 运营：深色实底 + Figma「查看详情」帧装饰背景（755:10364，blur 7.5px）+
+ * 半透明页面叠层（Bg/3-Page）。禁止再用纯色盖住令牌叠层。
+ */
+:root {
+  --dw-font-primary: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: var(--dw-font-primary);
+  color: var(--el-text-color-primary);
+  /* 画布基底：半透明令牌之下需要足够深的承载色 */
+  background-color: #000000;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--dw-font-primary);
+  background-color: #000000;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.dw-caption {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.dw-body2 {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.625;
+}
+
+.dw-subtitle2 {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+/**
+ * Element Plus 按钮：图标与文案在同一行内垂直居中（Tabler SVG + 中文混排）
+ * dw-btn-inner 用于「图标 + 文案」组合槽位。
+ */
+.el-button {
+  align-items: center;
+  justify-content: center;
+}
+
+.el-button > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.dw-btn-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.dw-btn-inner svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/**
+ * DW 运营次级按钮：使用运营主题的弱填充和次级强调边，避免复用 DW 构建的描边按钮观感。
+ */
+[data-dw-theme='dw-ops'] .el-button.dw-ops-secondary {
+  --el-button-text-color: var(--el-text-color-primary);
+  --el-button-bg-color: var(--el-fill-color-light);
+  --el-button-border-color: var(--el-border-color-dark);
+  --el-button-hover-text-color: var(--el-color-primary);
+  --el-button-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-fill-color-light));
+  --el-button-hover-border-color: var(--el-color-primary);
+  --el-button-active-text-color: var(--el-color-primary);
+  --el-button-active-bg-color: color-mix(in srgb, var(--el-color-primary) 16%, var(--el-fill-color-light));
+  --el-button-active-border-color: var(--el-color-primary);
+  --el-button-disabled-text-color: var(--el-text-color-disabled);
+  --el-button-disabled-bg-color: var(--el-fill-color-light);
+  --el-button-disabled-border-color: var(--el-border-color);
+}
+
+/* ========== 页面背景层次 ========== */
+
+.dw-page-bg {
+  position: relative;
+  isolation: isolate;
+  height: 100vh;
+  overflow: hidden;
+  /* 设计稿矢量叠层之下的承接色 */
+  background-color: #000000;
+}
+
+/**
+ * Figma「查看详情」帧背景层 Image [hidden]（755:10364）
+ * MCP 导出 PNG + 根节点 blur-[7.5px]
+ * https://www.figma.com/design/veQSA3UOgDDw11eAmHVS6x/DW-Detection1.1.5-v2?node-id=755-10342
+ */
+.dw-page-artwork {
+  position: absolute;
+  inset: -32px;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url('/dw-detection-page-bg.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  filter: blur(7.5px);
+  -webkit-filter: blur(7.5px);
+  transform: scale(1.08);
+  transform-origin: center center;
+}
+
+.dw-page-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  /* DW运营 Bg/3-Page — 与令牌 --el-bg-color-page 对齐 */
+  background: var(--el-bg-color-page);
+}
+
+.dw-shell {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/**
+ * DW运营面板 — Design Kit §2.10
+ *
+ * 边框语义（与 design-tokens / Element Plus 对齐）
+ * - 面板外轮廓：--dw-panel-border-strong（运行时 = Border/2-Dark）
+ * - 磨砂内缘：--dw-outline-inner-glass（Border/2-Dark 淡化）
+ * - 分割线 / 弱控件边：--el-border-color（Border/1-Base）
+ * - 次级强调边：--el-border-color-dark（Border/2-Dark）
+ * - 密铺卡片描边：--dw-panel-border-muted（同 Border/1-Base）
+ */
+.dw-panel {
+  position: relative;
+  box-sizing: border-box;
+  border-radius: var(--dw-panel-radius, 8px);
+  backdrop-filter: blur(var(--dw-panel-blur, 100px));
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur, 100px));
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3));
+  border: 1px solid var(--dw-panel-border-strong);
+}
+
+.dw-panel--chrome {
+  border-color: var(--dw-panel-border-strong);
+  /* Border/2-Dark 淡化内缘，与弹窗磨砂面板一致 */
+  box-shadow: inset 0 0 0 1px var(--dw-outline-inner-glass);
+}
+
+/**
+ * 运营主题 · 页面内大块容器（主内容区、表格托盘等）
+ * 推荐组合：`dw-panel dw-panel--dense dw-panel--chrome`（72px 磨砂 + 强轮廓 + 内缘高光）。
+ * 填充与模糊令牌：`--dw-panel-fill`、`--dw-panel-blur` / `--dw-panel-blur-dense`（见 theme.ts / design-tokens）。
+ * 局部控件如需同色半透明底，优先 `background: var(--dw-panel-fill)`，勿用实色 `--el-fill-color-blank` 盖住磨砂层次。
+ */
+
+.dw-panel--dense {
+  backdrop-filter: blur(var(--dw-panel-blur-dense, 72px));
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur-dense, 72px));
+  border-color: var(--dw-panel-border-muted, var(--el-border-color));
+}
+
+/**
+ * 侧栏信息卡（Figma 758:7940 / 1075:23947）
+ * — Fill/2-Light + Border/1-Base，不用 chrome 高亮描边与重度 backdrop-blur。
+ */
+.dw-panel--aside {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color);
+}
+
+/**
+ * DW运营普通页面承载层。
+ * 重要：磨砂玻璃主要用于弹窗/浮层，普通页面区域使用暗色实底或弱透明底，
+ * 避免把每个模块都做成 chrome 面板。
+ */
+.dw-ops-surface {
+  box-sizing: border-box;
+  background: var(--el-fill-color-blank);
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* 顶栏：运营 Fill/1-Blank + 同款模糊，贴合「半透明运营壳」 */
+.dw-header-bar {
+  position: relative;
+  z-index: 4;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+  backdrop-filter: blur(var(--dw-panel-blur, 100px));
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur, 100px));
+  background: var(--el-fill-color-blank);
+}
+
+.dw-header-bar .dw-avatar {
+  border: 1px solid var(--el-border-color);
+  box-sizing: border-box;
+}
+.dw-task-thumb {
+  aspect-ratio: 180 / 99;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  background: var(--el-fill-color-light);
+}
+
+.dw-task-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dw-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.dw-task-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 219.6px));
+  gap: 20px;
+}
+
+.dw-pagination-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 24px;
+}
+
+/* 分页器融入运营半透明填充（暗色背景） */
+[data-dw-theme='dw-ops'] .dw-pagination-wrap .el-pagination.is-background .btn-prev,
+[data-dw-theme='dw-ops'] .dw-pagination-wrap .el-pagination.is-background .btn-next,
+[data-dw-theme='dw-ops'] .dw-pagination-wrap .el-pagination.is-background .el-pager li {
+  background-color: var(--el-fill-color-blank);
+  border: 1px solid var(--el-border-color);
+}
+
+[data-dw-theme='dw-ops'] .dw-pagination-wrap .el-pagination.is-background .el-pager li.is-active {
+  background-color: color-mix(in srgb, var(--el-color-primary) 32%, var(--el-fill-color-blank));
+  border-color: color-mix(in srgb, var(--el-color-primary) 65%, var(--el-border-color));
+  color: var(--el-text-color-primary);
+}
+
+/**
+ * DW运营 · Dialog / Drawer / MessageBox 磨砂玻璃
+ * EP 默认 background: var(--el-dialog-bg-color)，无 backdrop-filter；
+ * theme 将背景设为 transparent，此处叠半透明面板色 + 模糊，透出下层页面。
+ */
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog {
+  max-width: calc(100vw - 32px);
+  background: transparent !important;
+  backdrop-filter: blur(var(--dw-panel-blur, 100px)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur, 100px)) saturate(1.1);
+  border: 1px solid var(--dw-panel-border-strong);
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px var(--dw-outline-inner-glass);
+  isolation: isolate;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog:not(.dw-dialog-xlarge) {
+  display: flex;
+  max-height: min(var(--dw-dialog-max-height, 600px), calc(100vh - 32px));
+  flex-direction: column;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog:not(.dw-dialog-xlarge) .el-dialog__header,
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog:not(.dw-dialog-xlarge) .el-dialog__footer {
+  flex: 0 0 auto;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog:not(.dw-dialog-xlarge) .el-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* DW 按钮组规范：由 flex/grid gap 统一控制 8px，清除 Element Plus 默认相邻外边距。 */
+[data-dw-theme='dw-ops'] .el-dialog__footer .el-button + .el-button,
+[data-dw-theme='dw-ops'] .el-message-box__btns .el-button + .el-button {
+  margin-left: 0;
+}
+
+[data-dw-theme='dw-ops'] .el-dialog__footer,
+[data-dw-theme='dw-ops'] .el-message-box__btns {
+  gap: var(--dw-button-group-gap, 8px);
+}
+
+[data-dw-theme='dw-ops'] .el-message-box {
+  display: flex;
+  width: var(--dw-dialog-size-confirm, 400px);
+  max-width: calc(100vw - 32px);
+  max-height: min(var(--dw-dialog-max-height, 600px), calc(100vh - 32px));
+  flex-direction: column;
+}
+
+[data-dw-theme='dw-ops'] .el-message-box .el-message-box__content {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay.is-message-box,
+[data-dw-theme='dw-ops'] .el-overlay-message-box {
+  overflow: hidden;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-message-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-message-box .el-message-box {
+  margin: 0;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3));
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog .el-dialog__header,
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog .el-dialog__body,
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog .el-dialog__footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* 弹窗标题与关闭按钮共用同一垂直中心，避免不同标题插槽造成按钮上下漂移。 */
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog .el-dialog__header {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  box-sizing: border-box;
+  padding-right: 48px;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog .el-dialog__headerbtn {
+  top: 50% !important;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  transform: translateY(-50%);
+}
+
+/**
+ * DW运营 · Steps（弹窗内）
+ * EP 默认节点背景为 --el-bg-color；dw-ops 设计令牌里 Bg/Fill 多为半透明，
+ * 横向连接线会从序号圆透出，视觉上像「线贯穿数字」。
+ * 节点改为不透明底 + 层级压住连接线（不用面板磨砂）。
+ */
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-steps:not(.el-steps--simple) .el-step__head {
+  position: relative;
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-steps:not(.el-steps--simple) .el-step__line {
+  z-index: 0;
+  /* 未完成段的横向轨道须可见；勿用 transparent，否则只剩进度 inner，未走过线段会消失 */
+  background-color: var(--el-text-color-placeholder);
+}
+
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-steps:not(.el-steps--simple) .el-step__icon {
+  position: relative;
+  z-index: 2;
+  /* 不透明底，避免连接线透出；不做磨砂面板效果 */
+  background-color: rgb(43 44 48) !important;
+  box-shadow: inset 0 0 0 1px var(--el-border-color-dark);
+}
+
+/* 当前步骤：品牌色实心节点 + 白色序号 */
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog.mtv-dialog .el-step__head.is-process .el-step__icon {
+  background-color: var(--el-color-primary) !important;
+  border-color: var(--el-color-primary) !important;
+  color: var(--el-color-white) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--el-color-white) 20%, transparent);
+}
+
+/* 当前步骤文案：Teleport 弹窗脱离 scoped，在此覆盖 EP .is-process 默认正文色 */
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog.mtv-dialog .el-step__title.is-process,
+[data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog.mtv-dialog .el-step__description.is-process {
+  color: var(--el-color-primary) !important;
+  font-weight: 600;
+}
+
+[data-dw-theme='dw-ops'] .el-drawer {
+  --el-drawer-bg-color: transparent;
+  background: transparent !important;
+  backdrop-filter: blur(var(--dw-panel-blur, 100px)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur, 100px)) saturate(1.1);
+  border-left: 1px solid var(--dw-panel-border-strong);
+  box-shadow:
+    -18px 0 64px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px var(--dw-outline-inner-glass);
+  isolation: isolate;
+}
+
+[data-dw-theme='dw-ops'] .el-drawer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3));
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-dw-theme='dw-ops'] .el-drawer .el-drawer__header,
+[data-dw-theme='dw-ops'] .el-drawer .el-drawer__body,
+[data-dw-theme='dw-ops'] .el-drawer .el-drawer__footer {
+  position: relative;
+  z-index: 1;
+}
+
+[data-dw-theme='dw-ops'] .el-message-box {
+  background: transparent !important;
+  backdrop-filter: blur(var(--dw-panel-blur, 100px)) saturate(1.1);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur, 100px)) saturate(1.1);
+  border: 1px solid var(--dw-panel-border-strong);
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px var(--dw-outline-inner-glass);
+  isolation: isolate;
+}
+
+[data-dw-theme='dw-ops'] .el-message-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3));
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-dw-theme='dw-ops'] .el-message-box .el-message-box__header,
+[data-dw-theme='dw-ops'] .el-message-box .el-message-box__container,
+[data-dw-theme='dw-ops'] .el-message-box .el-message-box__btns {
+  position: relative;
+  z-index: 1;
+}
+
+/**
+ * DW运营 · Popper 下拉 / 菜单 / 级联 / 自动完成 — 透明磨砂
+ * el-select / el-dropdown / el-cascader / el-autocomplete 等 teleported 浮层。
+ */
+[data-dw-theme='dw-ops'] .el-select__popper.el-popper,
+[data-dw-theme='dw-ops'] .el-dropdown__popper.el-popper,
+[data-dw-theme='dw-ops'] .el-cascader__dropdown.el-popper,
+[data-dw-theme='dw-ops'] .el-autocomplete__popper.el-popper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-dw-theme='dw-ops'] .el-select-dropdown,
+[data-dw-theme='dw-ops'] .el-dropdown-menu,
+[data-dw-theme='dw-ops'] .el-cascader__dropdown,
+[data-dw-theme='dw-ops'] .el-autocomplete-suggestion {
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3)) !important;
+  backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  border: 1px solid var(--dw-panel-border-strong);
+  border-radius: var(--dw-panel-radius, 8px);
+  box-shadow:
+    0 14px 44px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px var(--dw-outline-inner-glass);
+}
+
+[data-dw-theme='dw-ops'] .el-dropdown-menu {
+  padding: 6px 0;
+}
+
+[data-dw-theme='dw-ops'] .el-dropdown-menu__item:not(.is-disabled):focus,
+[data-dw-theme='dw-ops'] .el-dropdown-menu__item:not(.is-disabled):hover {
+  background-color: color-mix(in srgb, var(--el-fill-color-light) 55%, transparent);
+}
+
+[data-dw-theme='dw-ops'] .el-select-dropdown__item.is-hovering,
+[data-dw-theme='dw-ops'] .el-select-dropdown__item:hover {
+  background-color: color-mix(in srgb, var(--el-fill-color-light) 55%, transparent);
+}
+
+[data-dw-theme='dw-ops'] .el-popover.el-popper {
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3)) !important;
+  backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  border: 1px solid var(--dw-panel-border-strong);
+  border-radius: var(--dw-panel-radius, 8px);
+  box-shadow:
+    0 14px 44px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px var(--dw-outline-inner-glass);
+}
+
+/** DW运营 · Tooltip — 与暗色浮层保持一致，避免默认白底造成低对比度。 */
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper,
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper.is-light,
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper.is-dark {
+  color: var(--el-text-color-primary) !important;
+  background: var(--dw-panel-fill) !important;
+  border: 1px solid var(--dw-panel-border-strong) !important;
+  border-radius: var(--dw-panel-radius, 8px) !important;
+  box-shadow:
+    0 10px 32px color-mix(in srgb, var(--el-color-black) 45%, transparent),
+    inset 0 0 0 1px var(--dw-outline-inner-glass) !important;
+  backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+}
+
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper .el-popper__arrow::before {
+  background: var(--dw-panel-fill) !important;
+  border-color: var(--dw-panel-border-strong) !important;
+}
+
+/** Teleported tooltip / popover 不一定位于主题节点内，需要按语义角色兜底暗色对比度。 */
+.el-popper[role='tooltip'],
+.el-popper.dw-ops-tooltip,
+.el-popper.dw-meter-reference-hint {
+  color: var(--el-text-color-primary) !important;
+  background: var(--dw-panel-fill, var(--el-bg-color-overlay)) !important;
+  border: 1px solid var(--dw-panel-border-strong, var(--el-border-color-dark)) !important;
+  border-radius: var(--dw-panel-radius, 8px) !important;
+  box-shadow:
+    0 10px 32px color-mix(in srgb, var(--el-color-black) 45%, transparent),
+    inset 0 0 0 1px var(--dw-outline-inner-glass, transparent) !important;
+  backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+}
+
+.el-popper[role='tooltip'] .el-popper__arrow::before,
+.el-popper.dw-ops-tooltip .el-popper__arrow::before,
+.el-popper.dw-meter-reference-hint .el-popper__arrow::before {
+  background: var(--dw-panel-fill, var(--el-bg-color-overlay)) !important;
+  border-color: var(--dw-panel-border-strong, var(--el-border-color-dark)) !important;
+}
+
+/** Tooltip 只保留 Element Plus 的单层旋转方块箭头，兼顾方向与主题边框。 */
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper .el-popper__arrow,
+.el-popper[role='tooltip'] .el-popper__arrow,
+.el-popper.dw-ops-tooltip .el-popper__arrow,
+.el-popper.dw-meter-reference-hint .el-popper__arrow {
+  width: 10px !important;
+  height: 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper .el-popper__arrow::before,
+.el-popper[role='tooltip'] .el-popper__arrow::before,
+.el-popper.dw-ops-tooltip .el-popper__arrow::before,
+.el-popper.dw-meter-reference-hint .el-popper__arrow::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 10px !important;
+  height: 10px !important;
+  box-sizing: border-box !important;
+  border: 1px solid var(--dw-panel-border-strong, var(--el-border-color-dark)) !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
+  transform: rotate(45deg) !important;
+}
+
+[data-dw-theme='dw-ops'] .el-tooltip__popper.el-popper .el-popper__arrow::after,
+.el-popper[role='tooltip'] .el-popper__arrow::after,
+.el-popper.dw-ops-tooltip .el-popper__arrow::after,
+.el-popper.dw-meter-reference-hint .el-popper__arrow::after {
+  content: none !important;
+  display: none !important;
+}
+
+.el-dialog__body {
+  background: transparent;
+}
+
+[data-dw-theme='dw-ops'] .el-select__popper .el-popper__arrow::before,
+[data-dw-theme='dw-ops'] .el-dropdown__popper .el-popper__arrow::before,
+[data-dw-theme='dw-ops'] .el-cascader__dropdown .el-popper__arrow::before,
+[data-dw-theme='dw-ops'] .el-autocomplete__popper .el-popper__arrow::before,
+[data-dw-theme='dw-ops'] .el-picker__popper .el-popper__arrow::before,
+[data-dw-theme='dw-ops'] .el-popover.el-popper .el-popper__arrow::before {
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3)) !important;
+  border: 1px solid var(--dw-panel-border-strong) !important;
+}
+
+/** Date / Time 选择面板（挂在 body 的 popper 内） */
+[data-dw-theme='dw-ops'] .el-picker__popper.el-popper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-dw-theme='dw-ops'] .el-picker-panel,
+[data-dw-theme='dw-ops'] .el-time-panel {
+  background: var(--dw-panel-fill, rgba(71, 71, 71, 0.3)) !important;
+  backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  -webkit-backdrop-filter: blur(var(--dw-panel-blur-dense, 72px)) saturate(1.06);
+  border: 1px solid var(--dw-panel-border-strong);
+  border-radius: var(--dw-panel-radius, 8px);
+  box-shadow:
+    0 14px 44px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px var(--dw-outline-inner-glass);
+}
+
+[data-dw-theme='dw-ops'] .el-picker-panel .el-picker-panel__footer,
+[data-dw-theme='dw-ops'] .el-date-range-picker__time-header,
+[data-dw-theme='dw-ops'] .el-date-picker__header {
+  border-color: var(--el-border-color);
+}

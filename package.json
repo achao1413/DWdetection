@@ -1,0 +1,26 @@
+{
+  "name": "dwdetection",
+  "private": true,
+  "version": "1.1.7",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:standalone": "node scripts/build-standalone.mjs",
+    "preview": "vite preview",
+    "start": "npm run dev",
+    "serve": "npm run build && vite preview"
+  },
+  "dependencies": {
+    "@tabler/icons-vue": "^3.31.0",
+    "element-plus": "^2.9.10",
+    "vue": "^3.5.13",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.4",
+    "typescript": "~5.7.3",
+    "vite": "^6.3.5",
+    "vue-tsc": "^2.2.12"
+  }
+}
