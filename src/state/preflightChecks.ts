@@ -92,8 +92,6 @@ type TrainingEnvironmentMock = {
   trainingImageReady: boolean
   diskFreeGb: number
   memoryUsage: number
-  installedPackageVersion: string
-  requiredPackageVersion: string
 }
 
 export const trainingEnvironmentMock = reactive<TrainingEnvironmentMock>({
@@ -102,8 +100,6 @@ export const trainingEnvironmentMock = reactive<TrainingEnvironmentMock>({
   trainingImageReady: true,
   diskFreeGb: 3.8,
   memoryUsage: 92,
-  installedPackageVersion: '1.1.6',
-  requiredPackageVersion: '1.1.7',
 })
 
 const categoryNameMap: Record<DiagnosisCategoryKey, string> = {
@@ -191,9 +187,7 @@ function finishReport(
   }
 }
 
-let showPackageBlockerOnNextPrecheck = true
-
-function buildEnvironmentIssues(includePackageBlocker: boolean) {
+function buildEnvironmentIssues() {
   const issues: DiagnosisIssue[] = []
 
   if (trainingEnvironmentMock.gpuUsage > 90) {
@@ -256,35 +250,15 @@ function buildEnvironmentIssues(includePackageBlocker: boolean) {
     }))
   }
 
-  if (
-    includePackageBlocker
-    && trainingEnvironmentMock.installedPackageVersion !== trainingEnvironmentMock.requiredPackageVersion
-  ) {
-    issues.push(createIssue({
-      id: 'dependency-package-mismatch',
-      mode: 'precheck',
-      category: 'dependency',
-      subCategory: '标品算法包',
-      severity: 'alert',
-      blocking: true,
-      title: '标品算法包版本不兼容',
-      description: '🛑 AI预警：发现当前版本与标品算法包不兼容。',
-      suggestion: `已安装 ${trainingEnvironmentMock.installedPackageVersion}，推荐升级至 ${trainingEnvironmentMock.requiredPackageVersion}。`,
-      actions: [{ key: 'upgrade-package', label: '升级算法包', loadingMs: 900 }],
-    }))
-  }
-
   return issues
 }
 
 export function buildTrainingPreflightReport(payload: TrainingPreflightPayload) {
   const dataset = getDataset(payload.datasetId)
-  const includePackageBlocker = showPackageBlockerOnNextPrecheck
-  showPackageBlockerOnNextPrecheck = !showPackageBlockerOnNextPrecheck
   return finishReport(
     'precheck',
     `${dataset.name} 训前自检`,
-    buildEnvironmentIssues(includePackageBlocker),
+    buildEnvironmentIssues(),
     qualitySummary(dataset.id),
   )
 }
@@ -378,7 +352,6 @@ export function applyDiagnosisMockAction(actionKey: string) {
     'reinstall-image': '训练镜像已重新安装',
     'clean-disk': '磁盘已清理，可用空间已恢复',
     'release-memory': '高占用进程已释放',
-    'upgrade-package': '标品算法包已升级至推荐版本',
     'clean-damaged-images': '损坏图像已清理',
     'normalize-file-names': '图片名称已批量规范',
     'normalize-low-resolution': '低分辨率图片已统一至1080P规格',
@@ -396,8 +369,5 @@ export function applyDiagnosisMockAction(actionKey: string) {
   if (actionKey === 'reinstall-image') trainingEnvironmentMock.trainingImageReady = true
   if (actionKey === 'clean-disk') trainingEnvironmentMock.diskFreeGb = 32
   if (actionKey === 'release-memory') trainingEnvironmentMock.memoryUsage = 55
-  if (actionKey === 'upgrade-package') {
-    trainingEnvironmentMock.installedPackageVersion = trainingEnvironmentMock.requiredPackageVersion
-  }
   return messages[actionKey]
 }

@@ -206,7 +206,6 @@ function qualityText(level?: string) {
 
 function conciseDescription(issue: DiagnosisIssue) {
   const descriptions: Record<string, string> = {
-    'dependency-package-mismatch': '标品算法包版本不兼容。',
     'environment-gpu-high': '当前 GPU 占用 94%。',
     'environment-disk-low': '可用空间 3.8GB，低于 5GB。',
     'environment-memory-high': '当前内存占用 92%。',
@@ -217,7 +216,6 @@ function conciseDescription(issue: DiagnosisIssue) {
 
 function conciseSuggestion(issue: DiagnosisIssue) {
   const suggestions: Record<string, string> = {
-    'dependency-package-mismatch': '当前 1.1.6，推荐 1.1.7。',
     'environment-gpu-high': '资源紧张，建议稍后重试。',
     'environment-disk-low': '建议释放磁盘空间。',
     'environment-memory-high': '建议释放内存后重试。',
@@ -625,7 +623,11 @@ function toggleGroup(groupKey: string) {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--dw-button-group-gap, 8px);
+  gap: 8px;
+}
+
+.dw-dialog-footer .el-button + .el-button {
+  margin-left: 0;
 }
 
 .dw-drawer-body {
@@ -637,16 +639,30 @@ function toggleGroup(groupKey: string) {
 
 :global(.dw-problem-dialog.el-dialog) {
   max-width: calc(100vw - 32px);
+  max-height: min(var(--dw-dialog-max-height, 600px), calc(100vh - 32px));
+  display: flex;
+  flex-direction: column;
 }
 
 :global(.dw-problem-dialog.is-precheck.el-dialog) {
-  height: min(var(--dw-dialog-max-height, 600px), calc(100vh - 32px));
+  height: auto;
 }
 
 :global(.dw-problem-dialog .el-dialog__body) {
   display: flex;
   min-height: 0;
   flex-direction: column;
-  overflow: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+}
+
+:global(.dw-problem-dialog .el-dialog__footer) {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+:global(.dw-problem-dialog .dw-dialog-footer) {
+  width: 100%;
 }
 </style>

@@ -184,9 +184,9 @@ const algorithmMetaRows = computed<AlgorithmMetaRow[]>(() => [
             </el-breadcrumb>
           </div>
           <nav class="dw-main-nav" aria-label="主导航">
-            <button type="button" class="dw-main-nav__item is-active" @click="router.push('/')">推理</button>
-            <button type="button" class="dw-main-nav__item" @click="router.push('/annotation')">标注</button>
-            <button type="button" class="dw-main-nav__item" @click="router.push('/training')">训练</button>
+            <button type="button" class="dw-main-nav__item" @click="router.push({ name: 'annotation-list' })">数据标注</button>
+            <button type="button" class="dw-main-nav__item" @click="router.push({ name: 'training-list' })">模型训练</button>
+            <button type="button" class="dw-main-nav__item" @click="router.push({ name: 'meter-configuration-home' })">表计配置</button>
           </nav>
           <div class="dw-header-right">
           <div class="dw-user">

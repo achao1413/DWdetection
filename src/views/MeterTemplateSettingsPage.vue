@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { IconArrowLeft } from '@tabler/icons-vue'
 import ProblemDiagnosisDialog from '@/components/ProblemDiagnosisDialog.vue'
+import {
+  getMeterConfigurationContext,
+  getMeterConfigurationReturnQuery,
+} from '@/router/meterConfigurationContext'
 import { meterTemplateOptions, addMeterTemplate, findMeterTemplateByName } from '@/state/meterTemplates'
 import {
   applyDiagnosisMockAction,
@@ -21,9 +25,18 @@ const diagnosisReport = ref<DiagnosisReport | null>(null)
 
 function goBack() {
   if (route.query.from === 'wizard') {
-    router.push({ name: 'meter-template-validation', query: { resumeWizard: '1' } })
+    router.push({
+      name: 'meter-template-validation',
+      query: {
+        ...getMeterConfigurationContext(route.query),
+        resumeWizard: '1',
+      },
+    })
   } else {
-    router.push({ name: 'meter-template-validation' })
+    router.push({
+      name: 'meter-configuration-home',
+      query: getMeterConfigurationReturnQuery(route.query),
+    })
   }
 }
 

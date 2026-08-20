@@ -1,26 +1,49 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { IconDatabaseImport, IconDots, IconInfoCircle, IconSearch } from '@tabler/icons-vue'
 import DwAppShell from '@/components/DwAppShell.vue'
 import DatasetDetailDialog from '@/components/DatasetDetailDialog.vue'
 import DatasetUploadDialog from '@/components/DatasetUploadDialog.vue'
 import TrainingDialog from '@/components/TrainingDialog.vue'
-import { getAlgorithm, getAnalysisType, workflowState, type OverallQualityLevel } from '@/state/workflow'
+import { getAlgorithm, workflowState, type OverallQualityLevel } from '@/state/workflow'
 
 const router = useRouter()
+const route = useRoute()
 const keyword = ref('')
 const trainingOpen = ref(false)
 const uploadOpen = ref(false)
 const detailOpen = ref(false)
 const presetDatasetId = ref<string>()
 const activeDatasetId = ref<string>()
+const currentPage = ref(1)
+const pageSize = 10
 
 const filteredDatasets = computed(() => {
   const value = keyword.value.trim()
   if (!value) return workflowState.datasets
   return workflowState.datasets.filter((item) => item.name.includes(value) || item.description.includes(value))
 })
+
+const pagedDatasets = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredDatasets.value.slice(start, start + pageSize)
+})
+
+watch(keyword, () => {
+  currentPage.value = 1
+})
+
+watch(
+  () => route.query.datasetId,
+  (datasetId) => {
+    const normalizedId = Array.isArray(datasetId) ? datasetId[0] : datasetId
+    if (!normalizedId || !workflowState.datasets.some((item) => item.id === normalizedId)) return
+    activeDatasetId.value = normalizedId
+    detailOpen.value = true
+  },
+  { immediate: true },
+)
 
 function openTraining(datasetId?: string) {
   presetDatasetId.value = datasetId
@@ -37,12 +60,16 @@ function openDetail(datasetId: string) {
 }
 
 function handleMoreCommand(command: string, datasetId: string) {
-  if (command === 'training') openTraining(datasetId)
+  if (command === 'detail') openDetail(datasetId)
 }
 
 function onUploaded(datasetId: string) {
   activeDatasetId.value = datasetId
   detailOpen.value = true
+}
+
+function onTrainingCreated(versionId: string) {
+  router.push({ name: 'training-list', query: { guideVersionId: versionId } })
 }
 
 function qualityType(level: OverallQualityLevel) {
@@ -80,7 +107,7 @@ function qualityText(level: OverallQualityLevel) {
       <div class="dw-data-table">
         <div class="dw-table-layout">
           <div class="dw-table-head">
-            <span>数据名称</span><span>分析类型</span><span>上传时间</span><span>描述</span><span>已标注/总图片数</span>
+            <span>数据名称</span><span>上传时间</span><span>描述</span><span>已标注/总图片数</span>
             <span class="dw-quality-head">
               样本质量评估
               <el-popover trigger="hover" placement="bottom" :width="340" popper-class="dw-list-quality-standard">
@@ -103,9 +130,8 @@ function qualityText(level: OverallQualityLevel) {
             <span>操作</span>
           </div>
           <div class="dw-table-body">
-            <div v-for="dataset in filteredDatasets" :key="dataset.id" class="dw-table-row">
+            <div v-for="dataset in pagedDatasets" :key="dataset.id" class="dw-table-row">
               <span class="dw-name">{{ dataset.name }}</span>
-              <span>{{ getAnalysisType(dataset.analysisTypeId).name }}</span>
               <span>{{ dataset.uploadedAt }}</span>
               <span class="dw-desc">{{ dataset.description }}</span>
               <span class="dw-progress-cell">
@@ -120,18 +146,18 @@ function qualityText(level: OverallQualityLevel) {
                 <el-tag size="small" :type="qualityType(dataset.qualityStatus.overallLevel)" effect="dark">
                   {{ qualityText(dataset.qualityStatus.overallLevel) }}
                 </el-tag>
-                <small>{{ dataset.qualityStatus.issueCount }}项待优化</small>
+                <small v-if="dataset.qualityStatus.issueCount">{{ dataset.qualityStatus.issueCount }}项待优化</small>
               </button>
               <span class="dw-row-actions">
-                <el-button link type="primary" @click="openDetail(dataset.id)">详情</el-button>
                 <el-button link type="primary" @click="router.push({ name: 'annotation-tool', params: { datasetId: dataset.id } })">标注</el-button>
+                <el-button link type="primary" @click="openTraining(dataset.id)">训练</el-button>
                 <el-dropdown trigger="click" @command="(command: string) => handleMoreCommand(command, dataset.id)">
                   <el-button link type="primary">
                     <span class="dw-btn-inner">更多<IconDots :size="15" /></span>
                   </el-button>
                   <template #dropdown>
                     <el-dropdown-menu>
-                      <el-dropdown-item command="training">训练</el-dropdown-item>
+                      <el-dropdown-item command="detail">详情</el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -143,11 +169,18 @@ function qualityText(level: OverallQualityLevel) {
 
       <div class="dw-list-footer">
         <span>共 {{ filteredDatasets.length }} 条，当前算法覆盖 {{ new Set(filteredDatasets.map((item) => getAlgorithm(item.algorithmId).id)).size }} 类</span>
-        <el-pagination background small layout="prev, pager, next, jumper" :total="filteredDatasets.length" :page-size="10" />
+        <el-pagination
+          v-model:current-page="currentPage"
+          background
+          small
+          layout="prev, pager, next, jumper"
+          :total="filteredDatasets.length"
+          :page-size="pageSize"
+        />
       </div>
     </div>
 
-    <TrainingDialog v-model="trainingOpen" :dataset-id="presetDatasetId" @created="router.push({ name: 'training-list' })" />
+    <TrainingDialog v-model="trainingOpen" :dataset-id="presetDatasetId" @created="onTrainingCreated" />
     <DatasetUploadDialog v-model="uploadOpen" @uploaded="onUploaded" />
     <DatasetDetailDialog
       v-model="detailOpen"
@@ -204,9 +237,9 @@ h1 {
 }
 
 .dw-table-layout {
-  --dw-table-columns: 1.4fr 0.75fr 1.1fr 1.35fr 1.1fr 1fr 1.25fr;
+  --dw-table-columns: 1.45fr 1.05fr 1.5fr 1.15fr 1fr 1.25fr;
   width: 100%;
-  min-width: 1080px;
+  min-width: 720px;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -297,10 +330,8 @@ h1 {
 
   .dw-table-head > :nth-child(2),
   .dw-table-head > :nth-child(3),
-  .dw-table-head > :nth-child(4),
   .dw-table-row > :nth-child(2),
-  .dw-table-row > :nth-child(3),
-  .dw-table-row > :nth-child(4) {
+  .dw-table-row > :nth-child(3) {
     display: none;
   }
 

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { IconCircleCheck, IconLoader2, IconPhotoPlus, IconSchool, IconSparkles, IconTag } from '@tabler/icons-vue'
+import { IconCircleCheck, IconLoader2, IconSparkles } from '@tabler/icons-vue'
 import DatasetQualityPanel from '@/components/DatasetQualityPanel.vue'
 import DatasetUploadDialog from '@/components/DatasetUploadDialog.vue'
 import { deduplicateDatasetImages, getAlgorithm, getAnalysisType, getDataset } from '@/state/workflow'
@@ -31,7 +31,6 @@ const visible = computed({
 
 const dataset = computed(() => (props.datasetId ? getDataset(props.datasetId) : null))
 const analysisType = computed(() => (dataset.value ? getAnalysisType(dataset.value.analysisTypeId) : null))
-const qualityExcellent = computed(() => dataset.value?.qualityStatus.overallLevel === 'excellent')
 const dedupCandidates = computed(() => {
   if (!dataset.value) return []
   const duplicateStats = dataset.value.duplicateStats
@@ -64,11 +63,6 @@ function goAnnotation() {
   if (!dataset.value) return
   visible.value = false
   router.push({ name: 'annotation-tool', params: { datasetId: dataset.value.id } })
-}
-
-function train() {
-  if (!dataset.value) return
-  emit('train', dataset.value.id)
 }
 
 function handleQualityAction(action: 'add-images' | 'annotate' | 'deduplicate') {
@@ -134,30 +128,6 @@ function finishDeduplication() {
         </template>
       </DatasetQualityPanel>
     </div>
-
-    <template #footer>
-      <div class="dataset-detail__footer">
-        <el-button @click="uploadOpen = true">
-          <span class="dw-btn-inner"><IconPhotoPlus :size="18" />添加图片</span>
-        </el-button>
-        <template v-if="qualityExcellent">
-          <el-button @click="goAnnotation">
-            <span class="dw-btn-inner"><IconTag :size="18" />进入标注</span>
-          </el-button>
-          <el-button type="primary" @click="train">
-            <span class="dw-btn-inner"><IconSchool :size="18" />训练</span>
-          </el-button>
-        </template>
-        <template v-else>
-          <el-button @click="train">
-            <span class="dw-btn-inner"><IconSchool :size="18" />训练</span>
-          </el-button>
-          <el-button type="primary" @click="goAnnotation">
-            <span class="dw-btn-inner"><IconTag :size="18" />进入标注</span>
-          </el-button>
-        </template>
-      </div>
-    </template>
 
     <DatasetUploadDialog
       v-if="dataset"
@@ -393,11 +363,38 @@ function finishDeduplication() {
 }
 
 :global(.dataset-detail-dialog .el-dialog__body) {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden !important;
 }
 
 :global(.dataset-detail-dialog.el-dialog) {
+  display: flex;
   height: min(var(--dw-dialog-max-height, 600px), calc(100vh - 32px));
+  max-height: calc(100vh - 32px);
+  flex-direction: column;
+}
+
+:global(.dataset-detail-dialog .el-dialog__header) {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  :global(.dataset-detail-dialog.el-dialog) {
+    width: calc(100vw - 16px) !important;
+    height: calc(100vh - 16px);
+    max-height: calc(100vh - 16px);
+    margin: 8px auto !important;
+  }
+
+  :global(.dataset-detail-dialog .el-dialog__body) {
+    overflow-y: auto !important;
+  }
+
+  .dataset-detail {
+    height: auto;
+    overflow: visible;
+  }
 }
 
 </style>

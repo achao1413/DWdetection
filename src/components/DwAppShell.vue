@@ -13,15 +13,16 @@ const route = useRoute()
 const router = useRouter()
 
 const navItems = [
-  { key: 'inference', label: '推理', to: '/' },
-  { key: 'annotation', label: '标注', to: '/annotation' },
-  { key: 'training', label: '训练', to: '/training' },
+  { key: 'annotation', label: '数据标注', to: '/annotation' },
+  { key: 'training', label: '模型训练', to: '/training' },
+  { key: 'meter-configuration', label: '表计配置', to: '/meter-configuration' },
 ] as const
 
 const activeKey = computed(() => {
   if (route.path.startsWith('/annotation')) return 'annotation'
   if (route.path.startsWith('/training')) return 'training'
-  return 'inference'
+  if (route.path.startsWith('/meter-')) return 'meter-configuration'
+  return ''
 })
 
 function openTutorial() {

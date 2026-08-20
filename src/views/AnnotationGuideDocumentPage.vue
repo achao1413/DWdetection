@@ -10,6 +10,7 @@ import {
 import DwAppShell from '@/components/DwAppShell.vue'
 import {
   annotationGuideMap,
+  type AnnotationGuideExamplePage,
   type AnnotationGuideKey,
 } from '@/state/annotationGuides'
 
@@ -26,8 +27,9 @@ const guideKey = computed<AnnotationGuideKey>(() => {
   return isGuideKey(value) ? value : 'general'
 })
 const guide = computed(() => annotationGuideMap[guideKey.value])
-const pages = computed(() => [
+const pages = computed<AnnotationGuideExamplePage[]>(() => [
   {
+    displayMode: 'comparison',
     goodExample: guide.value.goodExample,
     badExample: guide.value.badExample,
     tips: guide.value.tips,
@@ -80,14 +82,17 @@ function nextPage() {
             <small>示例 {{ pageIndex + 1 }}</small>
           </header>
 
-          <div class="dw-guide-document__examples">
+          <div
+            class="dw-guide-document__examples"
+            :class="{ 'is-good-only': currentPage.displayMode === 'good-only' }"
+          >
             <section>
               <el-tag type="success" effect="dark">正确示例</el-tag>
               <img :src="currentPage.goodExample.image" :alt="currentPage.goodExample.title" />
               <h2>{{ currentPage.goodExample.title }}</h2>
               <p>{{ currentPage.goodExample.description }}</p>
             </section>
-            <section>
+            <section v-if="currentPage.badExample">
               <el-tag type="danger" effect="dark">错误示例</el-tag>
               <img :src="currentPage.badExample.image" :alt="currentPage.badExample.title" />
               <h2>{{ currentPage.badExample.title }}</h2>
@@ -210,6 +215,18 @@ function nextPage() {
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   margin-top: 32px;
+}
+
+.dw-guide-document__examples.is-good-only {
+  grid-template-columns: 1fr;
+}
+
+.dw-guide-document__examples.is-good-only section {
+  width: min(560px, 100%);
+}
+
+.dw-guide-document__examples.is-good-only img {
+  aspect-ratio: 16 / 8;
 }
 
 .dw-guide-document__examples section {

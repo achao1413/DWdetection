@@ -3,6 +3,10 @@ import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-rou
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
+    redirect: { name: 'annotation-list' },
+  },
+  {
+    path: '/inference',
     name: 'inference-home',
     component: () => import('@/views/InferenceHomePage.vue'),
     meta: { title: '算法训练工具' },
@@ -36,6 +40,24 @@ const routes: RouteRecordRaw[] = [
     name: 'training-list',
     component: () => import('@/views/TrainingPage.vue'),
     meta: { title: '训练' },
+  },
+  {
+    path: '/training/models/:modelId',
+    name: 'model-detail',
+    component: () => import('@/views/ModelDetailPage.vue'),
+    meta: { title: '模型详情' },
+  },
+  {
+    path: '/training/models/:modelId/versions/:versionId',
+    name: 'model-version-detail',
+    component: () => import('@/views/ModelVersionDetailPage.vue'),
+    meta: { title: '版本详情' },
+  },
+  {
+    path: '/meter-configuration',
+    name: 'meter-configuration-home',
+    component: () => import('@/views/MeterConfigurationHomePage.vue'),
+    meta: { title: '表计配置' },
   },
   {
     path: '/meter-template-validation',

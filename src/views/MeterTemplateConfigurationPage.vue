@@ -10,6 +10,7 @@ import {
   IconPhotoPlus,
 } from '@tabler/icons-vue'
 import DwAppShell from '@/components/DwAppShell.vue'
+import { getMeterConfigurationContext } from '@/router/meterConfigurationContext'
 import MeterTemplateCanvasMock from '@/components/meter-template/MeterTemplateCanvasMock.vue'
 import MeterTemplateConfigPanel from '@/components/meter-template/MeterTemplateConfigPanel.vue'
 import MeterConfigReferencePanel from '@/components/meter-template/MeterConfigReferencePanel.vue'
@@ -108,7 +109,7 @@ onBeforeUnmount(() => window.clearTimeout(referenceHintTimer))
 function goBack() {
   router.push({
     name: 'meter-template-validation',
-    query: route.query.algorithmId ? { algorithmId: String(route.query.algorithmId) } : undefined,
+    query: getMeterConfigurationContext(route.query),
   })
 }
 

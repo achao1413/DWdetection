@@ -14,17 +14,20 @@ export type AnnotationGuideExample = {
   description: string
 }
 
+export type AnnotationGuideExamplePage = {
+  displayMode?: 'comparison' | 'good-only'
+  goodExample: AnnotationGuideExample
+  badExample?: AnnotationGuideExample
+  tips: string[]
+}
+
 export type AnnotationGuide = {
   analysisType: AnnotationGuideKey
   guideTitle: string
   goodExample: AnnotationGuideExample
   badExample: AnnotationGuideExample
   tips: string[]
-  additionalExamples?: Array<{
-    goodExample: AnnotationGuideExample
-    badExample: AnnotationGuideExample
-    tips: string[]
-  }>
+  additionalExamples?: AnnotationGuideExamplePage[]
 }
 
 export const annotationGuideMap: Record<AnnotationGuideKey, AnnotationGuide> = {
@@ -57,6 +60,35 @@ export const annotationGuideMap: Record<AnnotationGuideKey, AnnotationGuide> = {
       description: '只覆盖指针局部会导致读数区域缺失。',
     },
     tips: ['表盘倾斜时仍按可见外接区域框选。', '指针和刻度可分标签标注，避免混成一个目标。'],
+    additionalExamples: [
+      {
+        displayMode: 'good-only',
+        goodExample: {
+          image: figmaAssets.taskThumbnailDefault,
+          title: '倾斜表盘完整覆盖',
+          description: '表盘存在倾斜时，沿可见外接区域完整框选表盘、指针与刻度。',
+        },
+        tips: ['保留完整表盘边缘，避免因倾斜漏出角点。', '标注范围内尽量减少相邻设备和文字干扰。'],
+      },
+      {
+        displayMode: 'good-only',
+        goodExample: {
+          image: figmaAssets.taskThumbnailGauge,
+          title: '指针与刻度分别标注',
+          description: '按标签配置分别框选指针和有效刻度区域，保证目标关系清晰。',
+        },
+        tips: ['细长指针应覆盖首尾端点。', '刻度区域应包含读数所需的完整量程。'],
+      },
+      {
+        displayMode: 'good-only',
+        goodExample: {
+          image: figmaAssets.taskThumbnailDefault,
+          title: '远景表计保持完整',
+          description: '远景样本仍需完整覆盖可辨识表盘，不因目标较小而仅框选局部。',
+        },
+        tips: ['目标过小时优先确认图像清晰度。', '同一画面存在多个表计时逐个标注。'],
+      },
+    ],
   },
   'digital-meter': {
     analysisType: 'digital-meter',

@@ -4,6 +4,7 @@ import { IconChevronLeft, IconChevronRight, IconGripVertical, IconX } from '@tab
 import {
   annotationGuideList,
   annotationGuideMap,
+  type AnnotationGuideExamplePage,
   type AnnotationGuideKey,
 } from '@/state/annotationGuides'
 
@@ -28,8 +29,9 @@ const dragState = ref<{
 } | null>(null)
 
 const guide = computed(() => annotationGuideMap[selectedGuideKey.value])
-const guideExamples = computed(() => [
+const guideExamples = computed<AnnotationGuideExamplePage[]>(() => [
   {
+    displayMode: 'comparison',
     goodExample: guide.value.goodExample,
     badExample: guide.value.badExample,
     tips: guide.value.tips,
@@ -146,7 +148,10 @@ onBeforeUnmount(stopDrag)
           />
         </el-select>
 
-        <div class="dw-guide-examples">
+        <div
+          class="dw-guide-examples"
+          :class="{ 'is-good-only': currentExample.displayMode === 'good-only' }"
+        >
           <article class="dw-guide-example is-good">
             <div class="dw-guide-example__media">
               <img :src="currentExample.goodExample.image" :alt="currentExample.goodExample.title" />
@@ -157,7 +162,7 @@ onBeforeUnmount(stopDrag)
             <p>{{ currentExample.goodExample.description }}</p>
           </article>
 
-          <article class="dw-guide-example is-bad">
+          <article v-if="currentExample.badExample" class="dw-guide-example is-bad">
             <div class="dw-guide-example__media">
               <img :src="currentExample.badExample.image" :alt="currentExample.badExample.title" />
               <span class="dw-guide-box" />
@@ -275,6 +280,14 @@ onBeforeUnmount(stopDrag)
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.dw-guide-examples.is-good-only {
+  grid-template-columns: 1fr;
+}
+
+.dw-guide-examples.is-good-only .dw-guide-example__media {
+  aspect-ratio: 16 / 8;
 }
 
 .dw-guide-example {

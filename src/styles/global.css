@@ -128,6 +128,11 @@ body {
   background: var(--el-bg-color-page);
 }
 
+/* DW Build 页面使用 Bg/1-Dark，与 Bg/2-Base 导航和内容表面形成层级。 */
+[data-dw-theme='dw-build'] .dw-page-scrim {
+  background: var(--el-bg-color-overlay);
+}
+
 .dw-shell {
   position: relative;
   z-index: 3;

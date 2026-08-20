@@ -5,7 +5,6 @@ import { ElMessage } from 'element-plus'
 import {
   IconArrowLeft,
   IconCheck,
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconClipboardCheck,
@@ -19,11 +18,15 @@ import {
   IconSearch,
   IconSettings,
   IconSparkles,
-  IconUser,
   IconX,
 } from '@tabler/icons-vue'
 import { figmaAssets } from '@/assets/figma'
+import DwAppShell from '@/components/DwAppShell.vue'
 import ProblemDiagnosisDialog from '@/components/ProblemDiagnosisDialog.vue'
+import {
+  getMeterConfigurationContext,
+  getMeterConfigurationReturnQuery,
+} from '@/router/meterConfigurationContext'
 import {
   applyDiagnosisMockAction,
   buildAbnormalDiagnosisReport,
@@ -482,7 +485,10 @@ function tryConsumeWizardResumeFromStorage() {
 onMounted(() => {
   if (route.query.resumeWizard === '1') {
     tryConsumeWizardResumeFromStorage()
-    router.replace({ name: 'meter-template-validation', query: {} })
+    router.replace({
+      name: 'meter-template-validation',
+      query: getMeterConfigurationContext(route.query),
+    })
   }
 })
 
@@ -677,53 +683,44 @@ function goMeterTemplateSettings() {
   }
   sessionStorage.setItem(WIZARD_RESUME_STORAGE_KEY, JSON.stringify(snapshot))
   createOpen.value = false
-  router.push({ name: 'meter-template-settings', query: { from: 'wizard' } })
+  router.push({
+    name: 'meter-template-settings',
+    query: {
+      ...getMeterConfigurationContext(route.query),
+      from: 'wizard',
+    },
+  })
 }
 
 function goBack() {
+  if (route.query.source === 'model-validation' && route.query.modelId) {
+    router.push({
+      name: 'model-detail',
+      params: { modelId: String(route.query.modelId) },
+      query: route.query.versionId ? { versionId: String(route.query.versionId) } : {},
+    })
+    return
+  }
   router.push({
-    name: 'algorithm-detail',
-    params: { id: String(route.query.algorithmId ?? 'meter') },
+    name: 'meter-configuration-home',
+    query: getMeterConfigurationReturnQuery(route.query),
   })
 }
 
 function goMeterTemplateConfiguration() {
   router.push({
     name: 'meter-template-configuration',
-    query: route.query.algorithmId ? { algorithmId: String(route.query.algorithmId) } : undefined,
+    query: getMeterConfigurationContext(route.query),
   })
 }
 </script>
 
 <template>
-  <div class="dw-page-bg">
-    <div class="dw-page-artwork" aria-hidden="true" />
-    <div class="dw-page-scrim" aria-hidden="true" />
-    <div class="dw-shell">
-      <header class="dw-header-bar">
-        <div class="dw-header-left">
-          <div class="dw-logo-mark" aria-hidden="true" />
-          <span class="dw-app-title dw-subtitle2">算法训练工具</span>
-          <el-breadcrumb class="dw-breadcrumb dw-body2" separator="/">
-            <el-breadcrumb-item :to="{ name: 'algorithm-detail', params: { id: String(route.query.algorithmId ?? 'meter') } }">首页</el-breadcrumb-item>
-            <el-breadcrumb-item>表计模板 &amp; 验证</el-breadcrumb-item>
-          </el-breadcrumb>
-        </div>
-        <div class="dw-header-right">
-          <div class="dw-user">
-            <div class="dw-avatar">
-              <IconUser :size="16" color="var(--el-text-color-primary)" />
-            </div>
-            <span class="dw-body2">User</span>
-            <IconChevronDown :size="18" color="var(--el-text-color-secondary)" />
-          </div>
-        </div>
-      </header>
-
-      <div class="mtv-body">
+  <DwAppShell>
+    <div class="mtv-body">
         <div class="mtv-back dw-caption" @click="goBack">
           <IconArrowLeft :size="16" color="var(--el-text-color-primary)" />
-          <span>返回查看详情</span>
+          <span>{{ route.query.source === 'model-validation' ? '返回模型详情' : '返回表计配置' }}</span>
         </div>
 
         <div class="mtv-page-head">
@@ -758,6 +755,14 @@ function goMeterTemplateConfiguration() {
             </el-button>
           </div>
         </div>
+
+        <section v-if="route.query.source === 'model-validation'" class="mtv-model-binding">
+          <div>
+            <span>当前验证模型</span>
+            <strong>{{ route.query.modelName }} {{ route.query.versionName }}</strong>
+          </div>
+          <p>该模型版本已自动绑定，无需重新选择。</p>
+        </section>
 
         <section class="mtv-table-panel">
           <el-table :data="filtered" class="mtv-table" stripe>
@@ -828,7 +833,6 @@ function goMeterTemplateConfiguration() {
             </template>
           </el-table>
         </section>
-      </div>
     </div>
 
     <ProblemDiagnosisDialog
@@ -1230,7 +1234,7 @@ function goMeterTemplateConfiguration() {
         </div>
       </template>
     </el-dialog>
-  </div>
+  </DwAppShell>
 </template>
 
 <style scoped>
@@ -1304,6 +1308,37 @@ function goMeterTemplateConfiguration() {
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+}
+
+.mtv-model-binding {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-light);
+}
+
+.mtv-model-binding div {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mtv-model-binding span,
+.mtv-model-binding p {
+  color: var(--el-text-color-secondary);
+}
+
+.mtv-model-binding strong {
+  color: var(--el-text-color-primary);
+}
+
+.mtv-model-binding p {
+  margin: 0;
 }
 
 .mtv-search {
