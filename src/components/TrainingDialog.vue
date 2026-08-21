@@ -2,14 +2,13 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { IconBulb, IconChevronDown, IconRefresh } from '@tabler/icons-vue'
+import { IconChevronDown, IconRefresh } from '@tabler/icons-vue'
 import DatasetDetailDialog from '@/components/DatasetDetailDialog.vue'
 import ProblemDiagnosisDialog from '@/components/ProblemDiagnosisDialog.vue'
 import {
   createModelTraining,
   getNextModelVersionNumber,
   hasActiveModelTraining,
-  suggestModelName,
   workflowState,
   type BaseModelType,
   type ModelParameters,
@@ -57,12 +56,10 @@ const diagnosisOpen = ref(false)
 const diagnosisReport = ref<DiagnosisReport | null>(null)
 const qualityReportOpen = ref(false)
 const precheckLoading = ref(false)
-const modelNameTouched = ref(false)
 
 const selectedDataset = computed(() => workflowState.datasets.find((item) => item.id === form.datasetId))
 const selectedModel = computed(() => workflowState.models.find((item) => item.id === form.modelSelection))
 const modelName = computed(() => selectedModel.value?.name ?? form.modelSelection.trim())
-const suggestedModelName = computed(() => form.datasetId ? suggestModelName(form.datasetId) : '')
 const nextVersionNumber = computed(() => getNextModelVersionNumber(selectedModel.value?.id, modelName.value))
 const trainingBlocked = computed(() => hasActiveModelTraining())
 
@@ -91,7 +88,6 @@ function resetForm() {
   form.baseModel = 'power'
   form.advancedOpen = false
   Object.assign(form.parameters, recommendedParameters)
-  modelNameTouched.value = false
 }
 
 watch(
@@ -101,20 +97,6 @@ watch(
   },
   { immediate: true },
 )
-
-watch(
-  () => form.modelSelection,
-  () => {
-    if (visible.value) modelNameTouched.value = true
-  },
-)
-
-function useSuggestion() {
-  if (!suggestedModelName.value) return
-  const existing = workflowState.models.find((item) => item.name === suggestedModelName.value)
-  form.modelSelection = existing?.id ?? suggestedModelName.value
-  modelNameTouched.value = true
-}
 
 function validateForm() {
   if (!modelName.value) {
@@ -265,14 +247,6 @@ function goSelectedDatasetAnnotation() {
         </div>
       </label>
 
-      <div
-        v-if="suggestedModelName && (!modelNameTouched || !modelName)"
-        class="dw-model-suggestion"
-      >
-        <span><IconBulb :size="16" />根据数据集标签，推荐模型名称“{{ suggestedModelName }}”</span>
-        <el-button link type="primary" @click="useSuggestion">使用推荐名称</el-button>
-      </div>
-
       <div class="dw-form-line is-top">
         <span>基础模型</span>
         <el-radio-group v-model="form.baseModel" class="dw-base-models">
@@ -396,8 +370,7 @@ function goSelectedDatasetAnnotation() {
   color: var(--el-text-color-secondary);
 }
 
-.dw-version-preview,
-.dw-model-suggestion {
+.dw-version-preview {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -409,20 +382,6 @@ function goSelectedDatasetAnnotation() {
 
 .dw-version-preview strong {
   color: var(--el-color-primary);
-}
-
-.dw-model-suggestion {
-  margin: -4px 0 0 118px;
-  justify-content: space-between;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--el-fill-color-light);
-}
-
-.dw-model-suggestion > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .dw-base-models {

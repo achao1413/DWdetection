@@ -1241,6 +1241,28 @@ export function getDataset(id: string) {
   return workflowGetters.datasetMap.value.get(id) ?? workflowState.datasets[0]
 }
 
+export function updateDatasetProfile(
+  datasetId: string,
+  payload: Pick<DatasetItem, 'name' | 'description'>,
+) {
+  const dataset = workflowState.datasets.find((item) => item.id === datasetId)
+  if (!dataset) throw new Error('数据集不存在')
+  const name = payload.name.trim()
+  if (!name) throw new Error('请输入数据集名称')
+  const duplicated = workflowState.datasets.some((item) => item.id !== datasetId && item.name === name)
+  if (duplicated) throw new Error('数据集名称已存在')
+  dataset.name = name
+  dataset.description = payload.description.trim()
+  return dataset
+}
+
+export function deleteDataset(datasetId: string) {
+  const datasetIndex = workflowState.datasets.findIndex((item) => item.id === datasetId)
+  if (datasetIndex < 0) throw new Error('数据集不存在')
+  workflowState.datasets.splice(datasetIndex, 1)
+  workflowState.annotationImages = workflowState.annotationImages.filter((image) => image.datasetId !== datasetId)
+}
+
 export function getModel(id: string) {
   return workflowGetters.modelMap.value.get(id)
 }
@@ -1329,7 +1351,8 @@ export async function publishModelVersion(versionId: string) {
 
   workflowState.modelVersions.forEach((item) => {
     if (item.modelId === model.id && item.releaseRole === 'current' && item.id !== version.id) {
-      item.releaseRole = 'historical'
+      item.releaseRole = 'unreleased'
+      item.publishedAt = undefined
     }
   })
   version.releaseRole = 'current'

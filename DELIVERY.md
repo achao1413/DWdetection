@@ -7,6 +7,7 @@
 | `src/`、`public/`、工程配置 | 可继续开发的 Vue 3 源码 |
 | `docs/DWdetection-v1.1.7-design-handoff.md` | 设计规范、页面状态与交互验收依据 |
 | `deliverables/DWdetection-v1.1.7-preview.html` | 无服务依赖的单文件演示 |
+| `deliverables/DWdetection-v1.1.7-preview-20260821.html` | 2026-08-21 最新设计留存快照 |
 | `release/DWdetection-v1.1.7-frontend-handoff.zip` | 源码、构建产物、文档的整包交付 |
 | `release/SHA256SUMS.txt` | 交付包完整性校验 |
 
@@ -48,7 +49,7 @@ scripts/                   单文件构建脚本
 
 | 原型模块 | 当前实现 | 后续接入建议 |
 | --- | --- | --- |
-| 数据集上传 | 浏览器文件列表与 Mock 元数据 | 对接分片上传、ZIP/DWD 解析、任务进度 |
+| 数据集上传 | 浏览器图片列表与 Mock 元数据 | 对接图片分片上传、解析与任务进度 |
 | 样本诊断 | 前端同步计算 | 后端返回质量结果和六维明细，前端只负责呈现 |
 | 标注保存 | 前端更新图片和标注数组 | 对接标注版本、冲突控制和批量保存 |
 | 训前自检 | 环境与依赖 Mock | 对接 GPU、内存、磁盘、镜像和算法包检查接口 |

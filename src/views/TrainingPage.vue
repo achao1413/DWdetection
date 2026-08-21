@@ -200,7 +200,7 @@ async function handleVersionAction(action: string, version: ModelVersion) {
     if (!canPublishModelVersion(version)) return
     const active = model.currentVersionId ? getModelVersion(model.currentVersionId) : undefined
     const message = active
-      ? `发布V${version.versionNumber}后，当前生效的V${active.versionNumber}将变为历史版本。是否继续？`
+      ? `发布V${version.versionNumber}后，当前生效的V${active.versionNumber}将变为未发布状态，是否继续？`
       : `确定发布V${version.versionNumber}并设为当前生效版本吗？`
     try {
       await ElMessageBox.confirm(message, '发布模型版本', {

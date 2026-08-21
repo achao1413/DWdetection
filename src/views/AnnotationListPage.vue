@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { IconDatabaseImport, IconDots, IconInfoCircle, IconSearch } from '@tabler/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { IconDatabaseImport, IconDots, IconDownload, IconEdit, IconSearch, IconTrash } from '@tabler/icons-vue'
 import DwAppShell from '@/components/DwAppShell.vue'
 import DatasetDetailDialog from '@/components/DatasetDetailDialog.vue'
 import DatasetUploadDialog from '@/components/DatasetUploadDialog.vue'
 import TrainingDialog from '@/components/TrainingDialog.vue'
-import { getAlgorithm, workflowState, type OverallQualityLevel } from '@/state/workflow'
+import {
+  deleteDataset,
+  updateDatasetProfile,
+  workflowState,
+  type DatasetItem,
+  type OverallQualityLevel,
+} from '@/state/workflow'
 
 const router = useRouter()
 const route = useRoute()
@@ -18,6 +25,9 @@ const presetDatasetId = ref<string>()
 const activeDatasetId = ref<string>()
 const currentPage = ref(1)
 const pageSize = 10
+const editOpen = ref(false)
+const editingDatasetId = ref('')
+const editForm = reactive({ name: '', description: '' })
 
 const filteredDatasets = computed(() => {
   const value = keyword.value.trim()
@@ -59,8 +69,68 @@ function openDetail(datasetId: string) {
   detailOpen.value = true
 }
 
-function handleMoreCommand(command: string, datasetId: string) {
-  if (command === 'detail') openDetail(datasetId)
+function downloadDataset(dataset: DatasetItem) {
+  const payload = {
+    id: dataset.id,
+    name: dataset.name,
+    description: dataset.description,
+    uploadedAt: dataset.uploadedAt,
+    annotated: dataset.annotated,
+    total: dataset.total,
+    files: dataset.images.map((image) => image.fileName),
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${dataset.name}.json`
+  link.click()
+  window.setTimeout(() => URL.revokeObjectURL(url), 0)
+  ElMessage.success('数据集文件已生成')
+}
+
+function openEdit(dataset: DatasetItem) {
+  editingDatasetId.value = dataset.id
+  editForm.name = dataset.name
+  editForm.description = dataset.description
+  editOpen.value = true
+}
+
+function saveDatasetProfile() {
+  try {
+    updateDatasetProfile(editingDatasetId.value, editForm)
+    editOpen.value = false
+    ElMessage.success('数据集信息已更新')
+  } catch (error) {
+    ElMessage.warning(error instanceof Error ? error.message : '数据集信息更新失败')
+  }
+}
+
+async function removeDataset(dataset: DatasetItem) {
+  try {
+    await ElMessageBox.confirm(
+      `删除“${dataset.name}”后，数据与标注记录将无法恢复。是否继续？`,
+      '删除数据集',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+        customClass: 'dw-ops-message-box',
+      },
+    )
+    deleteDataset(dataset.id)
+    const maxPage = Math.max(1, Math.ceil(filteredDatasets.value.length / pageSize))
+    currentPage.value = Math.min(currentPage.value, maxPage)
+    ElMessage.success('数据集已删除')
+  } catch (error) {
+    if (error instanceof Error) ElMessage.warning(error.message)
+  }
+}
+
+function handleMoreCommand(command: string, dataset: DatasetItem) {
+  if (command === 'download') downloadDataset(dataset)
+  if (command === 'edit') openEdit(dataset)
+  if (command === 'delete') removeDataset(dataset)
 }
 
 function onUploaded(datasetId: string) {
@@ -108,25 +178,7 @@ function qualityText(level: OverallQualityLevel) {
         <div class="dw-table-layout">
           <div class="dw-table-head">
             <span>数据名称</span><span>上传时间</span><span>描述</span><span>已标注/总图片数</span>
-            <span class="dw-quality-head">
-              样本质量评估
-              <el-popover trigger="hover" placement="bottom" :width="340" popper-class="dw-list-quality-standard">
-                <template #reference>
-                  <button type="button" aria-label="查看样本质量评估标准">
-                    <IconInfoCircle :size="14" />
-                  </button>
-                </template>
-                <div class="dw-quality-standard">
-                  <strong>样本质量评估标准</strong>
-                  <span>样本数量：优秀 &gt;100 张；一般 20-100 张；差 &lt;20 张</span>
-                  <span>样本时间：三个时段均覆盖且占比均 &gt;20% 为优秀</span>
-                  <span>样本重复：优秀 &lt;10%；一般 10%-20%；差 ≥20%</span>
-                  <span>类别均衡：按各标签数量与占比综合评估</span>
-                  <span>目标画幅：BBox &lt;5% 的占比为 0 时优秀</span>
-                  <span>标注质量：按完整性和规范性的较低等级评定</span>
-                </div>
-              </el-popover>
-            </span>
+            <span>样本质量评估</span>
             <span>操作</span>
           </div>
           <div class="dw-table-body">
@@ -151,13 +203,15 @@ function qualityText(level: OverallQualityLevel) {
               <span class="dw-row-actions">
                 <el-button link type="primary" @click="router.push({ name: 'annotation-tool', params: { datasetId: dataset.id } })">标注</el-button>
                 <el-button link type="primary" @click="openTraining(dataset.id)">训练</el-button>
-                <el-dropdown trigger="click" @command="(command: string) => handleMoreCommand(command, dataset.id)">
+                <el-dropdown trigger="click" @command="(command: string) => handleMoreCommand(command, dataset)">
                   <el-button link type="primary">
                     <span class="dw-btn-inner">更多<IconDots :size="15" /></span>
                   </el-button>
                   <template #dropdown>
                     <el-dropdown-menu>
-                      <el-dropdown-item command="detail">详情</el-dropdown-item>
+                      <el-dropdown-item command="download" :icon="IconDownload">下载</el-dropdown-item>
+                      <el-dropdown-item command="edit" :icon="IconEdit">编辑</el-dropdown-item>
+                      <el-dropdown-item command="delete" :icon="IconTrash" divided>删除</el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -168,7 +222,7 @@ function qualityText(level: OverallQualityLevel) {
       </div>
 
       <div class="dw-list-footer">
-        <span>共 {{ filteredDatasets.length }} 条，当前算法覆盖 {{ new Set(filteredDatasets.map((item) => getAlgorithm(item.algorithmId).id)).size }} 类</span>
+        <span>共 {{ filteredDatasets.length }} 条</span>
         <el-pagination
           v-model:current-page="currentPage"
           background
@@ -187,6 +241,28 @@ function qualityText(level: OverallQualityLevel) {
       :dataset-id="activeDatasetId"
       @train="openTraining"
     />
+
+    <el-dialog v-model="editOpen" width="var(--dw-dialog-size-small)" align-center append-to-body>
+      <template #header>
+        <div class="dw-dialog-title">编辑数据集</div>
+      </template>
+      <div class="dw-dataset-edit-form">
+        <label>
+          <span>数据集名称</span>
+          <el-input v-model="editForm.name" maxlength="40" />
+        </label>
+        <label>
+          <span>数据集描述</span>
+          <el-input v-model="editForm.description" type="textarea" :rows="3" maxlength="100" show-word-limit />
+        </label>
+      </div>
+      <template #footer>
+        <div class="dw-dialog-actions">
+          <el-button @click="editOpen = false">取消</el-button>
+          <el-button type="primary" @click="saveDatasetProfile">保存</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </DwAppShell>
 </template>
 
@@ -341,42 +417,6 @@ h1 {
   }
 }
 
-.dw-quality-head {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-.dw-quality-head button {
-  width: 20px;
-  height: 20px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--el-text-color-secondary);
-  cursor: help;
-}
-
-.dw-quality-head button:hover {
-  color: var(--el-color-primary);
-}
-
-.dw-quality-standard {
-  display: grid;
-  gap: 7px;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  line-height: 18px;
-}
-
-.dw-quality-standard strong {
-  color: var(--el-text-color-primary);
-  font-size: 13px;
-}
-
 .dw-progress-cell {
   display: grid;
   grid-template-columns: minmax(64px, 96px) auto;
@@ -419,5 +459,23 @@ h1 {
   height: 52px;
   color: var(--el-text-color-secondary);
   font-size: 12px;
+}
+
+.dw-dataset-edit-form {
+  display: grid;
+  gap: 14px;
+}
+
+.dw-dataset-edit-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.dw-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dw-button-group-gap, 8px);
 }
 </style>

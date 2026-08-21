@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage, type UploadUserFile } from 'element-plus'
-import { IconCircleCheck, IconFile, IconUpload, IconX } from '@tabler/icons-vue'
+import { IconCircleCheck, IconFile, IconInfoCircle, IconUpload, IconX } from '@tabler/icons-vue'
 import {
   getDataset,
   uploadDatasetImages,
@@ -64,16 +64,6 @@ watch(
   { immediate: true },
 )
 
-watch(
-  fileList,
-  (files) => {
-    if (props.datasetId) return
-    const packageFile = [...files].reverse().find((file) => /\.dwd$/i.test(file.name))
-    if (packageFile) form.name = packageFile.name.replace(/\.dwd$/i, '')
-  },
-  { deep: true },
-)
-
 function fillMockFiles() {
   const prefix = props.datasetId ? editingDataset.value?.id ?? 'dataset' : 'new_dataset'
   const names = [
@@ -107,17 +97,17 @@ function removeFile(uid: string | number | undefined) {
 
 function expandUploadFiles() {
   const periods: CaptureTimePeriod[] = ['morning', 'noon', 'afternoon']
-  return fileList.value.flatMap((file, fileIndex) => {
-    if (!/\.dwd$/i.test(file.name)) {
-      return [{ fileName: file.name, captureTimePeriod: periods[fileIndex % periods.length] }]
-    }
+  return fileList.value.map((file, fileIndex) => ({
+    fileName: file.name,
+    captureTimePeriod: periods[fileIndex % periods.length],
+  }))
+}
 
-    const packageName = file.name.replace(/\.dwd$/i, '')
-    return Array.from({ length: 12 }, (_, index) => ({
-      fileName: `${packageName}_${String(index + 1).padStart(3, '0')}.jpg`,
-      captureTimePeriod: periods[index % periods.length],
-    }))
-  })
+function downloadExampleFile() {
+  const link = document.createElement('a')
+  link.href = workflowState.algorithms[0]?.image ?? ''
+  link.download = 'DWdetection-导入示例.jpg'
+  link.click()
 }
 
 function finishUploadFlow() {
@@ -145,7 +135,7 @@ function cleanDamagedFiles(files: Array<{ fileName: string }>) {
 async function prepareUpload() {
   const files = expandUploadFiles()
   if (!files.length) {
-    ElMessage.warning('请先选择图片或 DWD 数据包')
+    ElMessage.warning('请先选择图片')
     return
   }
 
@@ -183,8 +173,12 @@ async function submit() {
   <el-dialog v-model="visible" width="var(--dw-dialog-size-small)" align-center append-to-body class="dataset-upload-dialog">
     <template #header>
       <div class="dataset-upload__title">
-        <IconUpload :size="18" />
-        <span>{{ datasetId ? '添加图片' : '新建/上传数据集' }}</span>
+        <span>导入数据</span>
+        <el-tooltip content="参考最新版本数据要求说明" placement="right" popper-class="dw-ops-tooltip">
+          <button type="button" class="dataset-upload__requirements" aria-label="查看数据要求说明">
+            <IconInfoCircle :size="17" />
+          </button>
+        </el-tooltip>
       </div>
     </template>
 
@@ -192,7 +186,7 @@ async function submit() {
       <div v-if="!datasetId" class="dataset-upload__form">
         <label>
           <span>数据集名称</span>
-          <el-input v-model="form.name" placeholder="选择数据包后自动填入" />
+          <el-input v-model="form.name" placeholder="请输入数据集名称" />
         </label>
         <label>
           <span>数据集描述</span>
@@ -214,15 +208,18 @@ async function submit() {
           multiple
           :auto-upload="false"
           :show-file-list="false"
-          accept=".jpg,.jpeg,.png,.dwd,image/jpeg,image/png"
+          accept=".jpg,.jpeg,.png,image/jpeg,image/png"
           @change="resetPreparation"
         >
           <div class="dataset-upload__drop">
             <IconUpload :size="28" />
-            <strong>拖拽或选择图片 / DWD 数据包</strong>
+            <strong>拖拽或选择图片</strong>
             <span>上传时会自动识别并清理无法解析的异常图片。</span>
           </div>
         </el-upload>
+        <el-button class="dataset-upload__example" link type="primary" @click="downloadExampleFile">
+          示例文件下载
+        </el-button>
 
         <div v-if="fileList.length" class="dataset-upload__file-summary">
           <strong>图片列表</strong>
@@ -243,7 +240,7 @@ async function submit() {
     <template #footer>
       <div class="dataset-upload__actions">
         <el-button @click="fillMockFiles">生成异常模拟样本</el-button>
-        <el-button type="primary" @click="submit">上传数据</el-button>
+        <el-button type="primary" @click="submit">导入数据</el-button>
       </div>
     </template>
 
@@ -305,6 +302,22 @@ async function submit() {
   font-weight: 600;
 }
 
+.dataset-upload__requirements {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--el-text-color-secondary);
+  cursor: help;
+}
+
+.dataset-upload__requirements:hover {
+  color: var(--el-color-primary);
+}
+
 .dataset-upload {
   display: flex;
   height: 100%;
@@ -344,6 +357,13 @@ async function submit() {
   font-size: 11px;
   line-height: 16px;
   text-align: center;
+}
+
+.dataset-upload__example {
+  align-self: flex-start;
+  height: 28px;
+  margin-top: 4px;
+  padding-inline: 0;
 }
 
 .dataset-upload__actions {

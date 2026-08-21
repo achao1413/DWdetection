@@ -9,10 +9,12 @@ import {
   IconBook,
   IconChartRadar,
   IconDeviceFloppy,
+  IconKeyboard,
   IconPhotoPlus,
   IconPoint,
   IconPointer,
   IconSchool,
+  IconSparkles,
   IconSquare,
 } from '@tabler/icons-vue'
 import AnnotationGuideFloating from '@/components/AnnotationGuideFloating.vue'
@@ -21,7 +23,6 @@ import DatasetUploadDialog from '@/components/DatasetUploadDialog.vue'
 import DwAppShell from '@/components/DwAppShell.vue'
 import TrainingDialog from '@/components/TrainingDialog.vue'
 import {
-  getAlgorithm,
   getAnalysisType,
   getDataset,
   getDatasetImages,
@@ -46,6 +47,7 @@ const uploadOpen = ref(false)
 const guideOpen = ref(false)
 const guideAutoOpened = ref(false)
 const guideHintVisible = ref(false)
+const qualityPopoverOpen = ref(false)
 let guideHintTimer: number | undefined
 
 const currentImage = computed(() => images.value.find((item) => item.id === currentImageId.value) ?? images.value[0])
@@ -113,6 +115,17 @@ function undo() {
 function save() {
   saveAnnotation(datasetId.value, currentImage.value.id)
   ElMessage.success('标注已保存')
+}
+
+function handleQualityAction(action: 'add-images' | 'annotate' | 'deduplicate') {
+  qualityPopoverOpen.value = false
+  if (action === 'add-images') {
+    uploadOpen.value = true
+    return
+  }
+  if (action === 'deduplicate') {
+    ElMessage.info('请在数据集列表的样本质量报告中执行图片去重')
+  }
 }
 
 watch(
@@ -195,21 +208,18 @@ onBeforeUnmount(() => window.clearTimeout(guideHintTimer))
             <strong>{{ dataset.annotated }}/{{ dataset.total }}</strong>
           </span>
           <el-popover
+            v-model:visible="qualityPopoverOpen"
             trigger="click"
             placement="bottom-end"
             width="780"
             popper-class="dw-quality-popover"
           >
-            <DatasetQualityPanel :dataset="dataset" contained>
+            <DatasetQualityPanel :dataset="dataset" contained @action="handleQualityAction">
               <template #radar-footer>
                 <section class="dw-quality-popover__meta">
                   <div>
                     <span>上传时间</span>
                     <strong>{{ dataset.uploadedAt }}</strong>
-                  </div>
-                  <div>
-                    <span>算法分析类型</span>
-                    <strong>{{ getAlgorithm(dataset.algorithmId).name }} / {{ analysisType.name }}</strong>
                   </div>
                   <div>
                     <span>数据描述</span>
@@ -245,8 +255,15 @@ onBeforeUnmount(() => window.clearTimeout(guideHintTimer))
           >
             <component :is="tool.icon" :size="20" />
           </button>
+          <button type="button" title="AI标注" aria-label="AI标注">
+            <IconSparkles :size="20" />
+          </button>
+          <span class="dw-toolbox__divider" aria-hidden="true" />
           <button type="button" title="撤销" @click="undo">
             <IconArrowBackUp :size="20" />
+          </button>
+          <button type="button" class="dw-toolbox__shortcut" title="快捷键" aria-label="快捷键">
+            <IconKeyboard :size="20" />
           </button>
           <el-popover
             :visible="guideHintVisible"
@@ -560,7 +577,15 @@ onBeforeUnmount(() => window.clearTimeout(guideHintTimer))
   background: var(--el-fill-color-light);
 }
 
-.dw-toolbox .dw-toolbox__guide {
+.dw-toolbox__divider {
+  width: 28px;
+  height: 1px;
+  flex: 0 0 auto;
+  margin: 1px auto;
+  background: var(--el-border-color);
+}
+
+.dw-toolbox .dw-toolbox__shortcut {
   margin-top: auto;
   box-shadow: 0 -1px 0 var(--el-border-color);
 }
@@ -727,7 +752,7 @@ onBeforeUnmount(() => window.clearTimeout(guideHintTimer))
 
 .dw-quality-popover__meta {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
 }
 
@@ -736,14 +761,6 @@ onBeforeUnmount(() => window.clearTimeout(guideHintTimer))
   gap: 4px;
   min-width: 0;
   padding: 6px 8px;
-}
-
-.dw-quality-popover__meta div:first-child {
-  border-right: 1px solid var(--el-border-color);
-}
-
-.dw-quality-popover__meta div:last-child {
-  grid-column: 1 / -1;
 }
 
 .dw-quality-popover__meta span {

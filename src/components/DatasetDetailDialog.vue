@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'
 import { IconCircleCheck, IconLoader2, IconSparkles } from '@tabler/icons-vue'
 import DatasetQualityPanel from '@/components/DatasetQualityPanel.vue'
 import DatasetUploadDialog from '@/components/DatasetUploadDialog.vue'
-import { deduplicateDatasetImages, getAlgorithm, getAnalysisType, getDataset } from '@/state/workflow'
+import { deduplicateDatasetImages, getDataset } from '@/state/workflow'
 
 const props = defineProps<{
   modelValue: boolean
@@ -30,7 +30,6 @@ const visible = computed({
 })
 
 const dataset = computed(() => (props.datasetId ? getDataset(props.datasetId) : null))
-const analysisType = computed(() => (dataset.value ? getAnalysisType(dataset.value.analysisTypeId) : null))
 const dedupCandidates = computed(() => {
   if (!dataset.value) return []
   const duplicateStats = dataset.value.duplicateStats
@@ -115,10 +114,6 @@ function finishDeduplication() {
             <div>
               <span>上传时间</span>
               <strong>{{ dataset.uploadedAt }}</strong>
-            </div>
-            <div>
-              <span>算法分析类型</span>
-              <strong>{{ getAlgorithm(dataset.algorithmId).name }} / {{ analysisType?.name }}</strong>
             </div>
             <div>
               <span>数据描述</span>
@@ -230,7 +225,7 @@ function finishDeduplication() {
 
 .dataset-detail__meta {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   gap: 6px;
 }
@@ -240,14 +235,6 @@ function finishDeduplication() {
   gap: 4px;
   min-width: 0;
   padding: 6px 8px;
-}
-
-.dataset-detail__meta div:first-child {
-  border-right: 1px solid var(--el-border-color);
-}
-
-.dataset-detail__meta div:last-child {
-  grid-column: 1 / -1;
 }
 
 .dataset-detail__meta strong {

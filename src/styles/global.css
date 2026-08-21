@@ -348,6 +348,37 @@ body {
   margin: 0;
 }
 
+/* MessageBox 会挂载到 body，使用语义类保证脱离主题节点后仍遵循 DW Build 实底弹窗规范。 */
+.el-message-box.dw-ops-message-box {
+  width: var(--dw-dialog-size-confirm, 400px) !important;
+  max-width: calc(100vw - 32px);
+  border: 1px solid var(--el-border-color);
+  border-radius: var(--dw-panel-radius, 8px);
+  background: var(--el-bg-color) !important;
+  box-shadow: 0 20px 56px color-mix(in srgb, var(--el-color-black) 56%, transparent);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.el-message-box.dw-ops-message-box .el-message-box__header {
+  padding: 16px 16px 8px;
+}
+
+.el-message-box.dw-ops-message-box .el-message-box__content {
+  padding: 8px 16px 14px;
+}
+
+.el-message-box.dw-ops-message-box .el-message-box__btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dw-button-group-gap, 8px);
+  padding: 0 16px 16px;
+}
+
+.el-message-box.dw-ops-message-box .el-message-box__btns .el-button + .el-button {
+  margin-left: 0;
+}
+
 [data-dw-theme='dw-ops'] .el-overlay-dialog .el-dialog::before {
   content: '';
   position: absolute;
