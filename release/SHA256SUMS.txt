@@ -1,1 +1,1 @@
-970a04265280104bbf535de90760843aeab269546fbfb3599fd3526fe7c30e89  release/DWdetection-v1.1.7-frontend-handoff.zip
+2fd79fc2e68943a5297636382d09d1068fc7faa543b024f82f5b11e88e683dee  release/DWdetection-v1.1.7-frontend-handoff.zip
